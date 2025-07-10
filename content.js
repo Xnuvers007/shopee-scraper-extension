@@ -1,15 +1,4 @@
 (async function () {
-  if (!window.XLSX) {
-    await new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js';
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-    console.log('✅ SheetJS siap dipakai!');
-  }
-
   const delay = ms => new Promise(res => setTimeout(res, ms));
   const SCROLL_STEP = 300;
   const SCROLL_DELAY = 800;
@@ -68,7 +57,9 @@
     }
 
     const wb = XLSX.utils.book_new();
+
     const ws = XLSX.utils.json_to_sheet(data);
+
     XLSX.utils.book_append_sheet(wb, ws, 'Produk');
 
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
