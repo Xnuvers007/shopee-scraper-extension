@@ -6,10 +6,42 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>🛍 Shopee Scraper</h1>
-  <input type="text" id="keyword" placeholder="Masukkan kata kunci">
-  <button id="scrapeBtn">Scrape Sekarang</button>
-  <div id="status">Status: Menunggu...</div>
+  <div class="container">
+    <div class="header">
+      <h1>Shopee Scraper</h1>
+      <p>Scrape produk dari Shopee dengan mudah.</p>
+    </div>
+    <div class="form-group">
+      <label for="keyword">Kata Kunci</label>
+      <input type="text" id="keyword" placeholder="Contoh: VPS 1 tahun">
+    </div>
+    <div class="page-range">
+      <div class="form-group">
+        <label for="startPage">Mulai Halaman</label>
+        <input type="number" id="startPage" value="1" min="1">
+      </div>
+      <div class="form-group">
+        <label for="endPage">Hingga Halaman</label>
+        <input type="number" id="endPage" placeholder="Terakhir" min="1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="exportFormat">Format Ekspor</label>
+      <select id="exportFormat">
+        <option value="xlsx" selected>XLSX</option>
+        <option value="pdf">PDF</option>
+        <option value="json">JSON</option>
+        <option value="txt">TXT</option>
+      </select>
+    </div>
+    <button id="scrapeBtn">Mulai Scrape</button>
+    <div id="status">Status: Menunggu...</div>
+    <div id="progressContainer" style="display: none;">
+        <label for="progressBar">Progress:</label>
+        <progress id="progressBar" value="0" max="100"></progress>
+        <span id="progressText">0%</span>
+    </div>
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>
