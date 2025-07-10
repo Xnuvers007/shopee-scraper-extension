@@ -79,18 +79,19 @@ async function waitForPageRender(selector, timeout = 10000) {
 
     await waitForPageRender('ul.shopee-search-item-result__items > li');
 
-    while (currentPage <= endPage) {
+    while (!endPage || currentPage <= endPage) {
       await scrapePage();
-      updateProgress((currentPage / endPage) * 100);
-
+      updateProgress(endPage ? (currentPage / endPage) * 100 : 0);
+    
       const nextButton = document.querySelector('.shopee-icon-button--right');
       if (!nextButton || nextButton.disabled) {
         updateStatus("Selesai. Tombol 'Berikutnya' tidak ditemukan atau dinonaktifkan.");
         break;
       }
-
+    
       nextButton.click();
       await delay(3000);
+      await waitForPageRender('ul.shopee-search-item-result__items > li');
       currentPage++;
     }
 
