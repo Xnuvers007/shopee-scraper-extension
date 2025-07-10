@@ -2,10 +2,19 @@
   "manifest_version": 3,
   "name": "Shopee Scraper GUI",
   "version": "1.2",
-  "description": "Scrape produk Shopee dengan GUI dan ekspor ke XLSX",
+  "version_name": "1.2.0",
+  "author": "Xnuvers007",
+  "description": "Ekstensi Chrome untuk melakukan scraping data produk dari Shopee.co.id dengan antarmuka yang mudah digunakan dan mengekspor hasilnya ke format XLSX, PDF, JSON, atau TXT.",
+  "homepage_url": "https://github.com/xnuvers007/shopee-scraper-extension",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
     "scripting",
-    "activeTab"
+    "activeTab",
+    "storage"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -19,8 +28,16 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["libs/xlsx.full.min.js"],
-      "matches": ["https://shopee.co.id/*"]
+      "resources": [
+        "libs/xlsx.full.min.js",
+        "libs/jspdf.umd.min.js",
+        "libs/jspdf.plugin.autotable.js"
+      ],
+      "matches": [
+        "https://shopee.co.id/*"
+      ]
     }
-  ]
+  ],
+  "minimum_chrome_version": "88",
+  "offline_enabled": true
 }
