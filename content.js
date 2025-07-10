@@ -1,70 +1,134 @@
 (async function () {
+  const { startPage, endPage, exportFormat, keyword } = window.scrapingOptions;
+
   const delay = ms => new Promise(res => setTimeout(res, ms));
-  const SCROLL_STEP = 300;
-  const SCROLL_DELAY = 800;
-  const END_SCROLL_WAIT_COUNT = 12;
-  const scrapedItems = new Set();
+  const SCROLL_STEP = 500;
+  const SCROLL_DELAY = 1000;
+
   const allProducts = [];
+  const scrapedItems = new Set();
+  let currentPage = startPage;
 
-  async function smoothScrollAndScrapeAll() {
-    let lastHeight = 0;
-    let lastCount = 0;
-    let sameCount = 0;
-
-    while (sameCount < END_SCROLL_WAIT_COUNT) {
-      window.scrollBy({ top: SCROLL_STEP, behavior: 'smooth' });
-      await delay(SCROLL_DELAY);
-
-      scrapeCurrentBatch();
-
-      const newHeight = document.body.scrollHeight;
-      const currentCount = allProducts.length;
-
-      if (newHeight === lastHeight && currentCount === lastCount) {
-        sameCount++;
-      } else {
-        sameCount = 0;
-        lastHeight = newHeight;
-        lastCount = currentCount;
-      }
-    }
+  function updateStatus(message) {
+      chrome.runtime.sendMessage({ type: "SCRAPING_STATUS", message });
   }
 
-  function scrapeCurrentBatch() {
+  function updateProgress(progress) {
+      chrome.runtime.sendMessage({ type: "SCRAPING_PROGRESS", progress });
+  }
+
+  async function scrapePage() {
+    updateStatus(`Menscrape halaman ${currentPage}...`);
+    let lastHeight = 0;
+    let sameHeightCount = 0;
+
+    while (sameHeightCount < 5) {
+        window.scrollBy(0, SCROLL_STEP);
+        await delay(SCROLL_DELAY);
+        const newHeight = document.body.scrollHeight;
+        if (newHeight === lastHeight) {
+            sameHeightCount++;
+        } else {
+            sameHeightCount = 0;
+            lastHeight = newHeight;
+        }
+    }
+
     document.querySelectorAll('ul.shopee-search-item-result__items > li.shopee-search-item-result__item').forEach(li => {
       const name = li.querySelector('div.line-clamp-2')?.innerText.trim();
       const priceWhole = li.querySelector('.text-base\\/5')?.innerText?.trim();
       const pricePrefix = li.querySelector('.text-xs\\/sp14.font-medium')?.innerText?.trim();
       const link = li.querySelector('a')?.href;
+      const location = li.querySelector('div[data-testid="pdp-comp-shipping"]')?.innerText.trim();
 
       if (name && link && !scrapedItems.has(link)) {
         scrapedItems.add(link);
         allProducts.push({
-          Name: name,
-          Price: `${pricePrefix || "Rp"} ${priceWhole || "N/A"}`,
-          Link: link
+          "Nama Produk": name,
+          "Harga": `${pricePrefix || "Rp"} ${priceWhole || "N/A"}`,
+          "Lokasi": location || "N/A",
+          "Link": link
         });
       }
     });
-
-    console.log(`📦 Produk sementara terkumpul: ${allProducts.length}`);
   }
 
-  function exportToXLSX(data, filename = 'shopee_products.xlsx') {
-    if (!data || !data.length) {
-      console.warn('Tidak ada data untuk diekspor.');
-      return;
+  async function startScraping() {
+    while (currentPage <= endPage) {
+      await scrapePage();
+      updateProgress((currentPage / endPage) * 100);
+
+      const nextButton = document.querySelector('.shopee-icon-button--right');
+      if (!nextButton || nextButton.disabled) {
+        updateStatus("Selesai. Tombol 'Berikutnya' tidak ditemukan atau dinonaktifkan.");
+        break;
+      }
+
+      nextButton.click();
+      await delay(3000);
+      currentPage++;
     }
 
+    updateStatus(`Scraping selesai. Ditemukan ${allProducts.length} produk.`);
+    exportData();
+    updateProgress(100);
+  }
+
+  function exportData() {
+    const filename = `${keyword}_${new Date().toISOString().slice(0,10)}`;
+    switch (exportFormat) {
+      case 'xlsx':
+        exportToXLSX(allProducts, `${filename}.xlsx`);
+        break;
+      case 'pdf':
+        exportToPDF(allProducts, `${filename}.pdf`);
+        break;
+      case 'json':
+        exportToJSON(allProducts, `${filename}.json`);
+        break;
+      case 'txt':
+        exportToTXT(allProducts, `${filename}.txt`);
+        break;
+    }
+  }
+
+  function exportToXLSX(data, filename) {
     const wb = XLSX.utils.book_new();
-
     const ws = XLSX.utils.json_to_sheet(data);
-
     XLSX.utils.book_append_sheet(wb, ws, 'Produk');
-
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    downloadBlob(new Blob([wbout], { type: 'application/octet-stream' }), filename);
+  }
 
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+  function exportToPDF(data, filename) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.autoTable({
+        head: [Object.keys(data[0])],
+        body: data.map(Object.values),
+    });
+    doc.save(filename);
+  }
+
+  function exportToJSON(data, filename) {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    downloadBlob(blob, filename);
+  }
+
+  function exportToTXT(data, filename) {
+    let txtString = "";
+    data.forEach(item => {
+        txtString += `Nama Produk: ${item["Nama Produk"]}\n`;
+        txtString += `Harga: ${item["Harga"]}\n`;
+        txtString += `Lokasi: ${item["Lokasi"]}\n`;
+        txtString += `Link: ${item["Link"]}\n\n`;
+    });
+    const blob = new Blob([txtString], { type: 'text/plain' });
+    downloadBlob(blob, filename);
+  }
+
+  function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -75,15 +139,8 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 100);
-
-    console.log(`📥 File XLSX '${filename}' sudah didownload.`);
   }
 
-  console.log("📜 Mulai scroll dan scraping produk Shopee...");
-  await smoothScrollAndScrapeAll();
+  startScraping();
 
-  console.log("✅ Scroll dan scraping selesai. Total produk ditemukan:", allProducts.length);
-  console.table(allProducts);
-
-  exportToXLSX(allProducts);
 })();
