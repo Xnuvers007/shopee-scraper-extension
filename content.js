@@ -39,7 +39,8 @@
       const priceWhole = li.querySelector('.text-base\\/5')?.innerText?.trim();
       const pricePrefix = li.querySelector('.text-xs\\/sp14.font-medium')?.innerText?.trim();
       const link = li.querySelector('a')?.href;
-      const location = li.querySelector('div[data-testid="pdp-comp-shipping"]')?.innerText.trim();
+      const locationLabel = li.querySelector('span[aria-label^="location-"]');
+      const location = locationLabel ? locationLabel.nextElementSibling?.innerText.trim() : 'N/A';
 
       if (name && link && !scrapedItems.has(link)) {
         scrapedItems.add(link);
