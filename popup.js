@@ -1,7 +1,8 @@
 document.getElementById("scrapeBtn").addEventListener("click", async () => {
   const keyword = document.getElementById("keyword").value.trim();
   const startPage = parseInt(document.getElementById("startPage").value, 10);
-  const endPage = document.getElementById("endPage").value ? parseInt(document.getElementById("endPage").value, 10) : Infinity;
+  const endPageInput = document.getElementById("endPage").value;
+  const endPage = endPageInput ? parseInt(endPageInput, 10) : null;
   const exportFormat = document.getElementById("exportFormat").value;
   const status = document.getElementById("status");
   const progressContainer = document.getElementById("progressContainer");
