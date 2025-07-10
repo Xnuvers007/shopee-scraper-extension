@@ -54,6 +54,17 @@
     });
   }
 
+async function waitForPageRender(selector, timeout = 10000) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    if (document.querySelector(selector)) {
+      return true;
+    }
+    await delay(500);
+  }
+  throw new Error(`Elemen "${selector}" tidak ditemukan dalam ${timeout / 1000} detik.`);
+}
+
   async function startScraping() {
     Swal.fire({
       title: 'Memulai Scraping!',
@@ -65,6 +76,8 @@
         Swal.showLoading();
       }
     });
+
+    await waitForPageRender('ul.shopee-search-item-result__items > li');
 
     while (currentPage <= endPage) {
       await scrapePage();
@@ -129,15 +142,43 @@
     downloadBlob(new Blob([wbout], { type: 'application/octet-stream' }), filename);
   }
 
-  function exportToPDF(data, filename) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.autoTable({
-        head: [Object.keys(data[0])],
-        body: data.map(Object.values),
-    });
-    doc.save(filename);
-  }
+function exportToPDF(data, filename) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+
+  doc.setFontSize(14);
+  doc.text("Daftar Produk Shopee", 14, 15);
+
+  doc.autoTable({
+    startY: 20,
+    head: [['Nama Produk', 'Harga', 'Lokasi', 'Link']],
+    body: data.map(item => [
+      item['Nama Produk'],
+      item['Harga'],
+      item['Lokasi'],
+      item['Link']
+    ]),
+    styles: {
+      fontSize: 9,
+      cellPadding: 2,
+      valign: 'top',
+    },
+    headStyles: {
+      fillColor: [44, 62, 80],
+      textColor: 255,
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      0: { cellWidth: 40 },
+      1: { cellWidth: 25 },
+      2: { cellWidth: 25 },
+      3: { cellWidth: 90 } // Link wrap
+    }
+  });
+
+  doc.save(filename);
+}
+
 
   function exportToJSON(data, filename) {
     const jsonString = JSON.stringify(data, null, 2);
