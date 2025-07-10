@@ -9,7 +9,12 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
   const progressText = document.getElementById("progressText");
 
   if (!keyword) {
-    alert("Masukkan kata kunci terlebih dahulu!");
+    Swal.fire({
+      title: 'Oops...',
+      text: 'Kata kunci tidak boleh kosong!',
+      icon: 'error',
+      confirmButtonText: 'OK'
+    });
     return;
   }
 
@@ -28,7 +33,12 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
       chrome.tabs.onUpdated.removeListener(listener);
       chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        files: ['libs/xlsx.full.min.js', 'libs/jspdf.umd.min.js', 'libs/jspdf.plugin.autotable.js']
+        files: [
+          'libs/xlsx.full.min.js', 
+          'libs/jspdf.umd.min.js', 
+          'libs/jspdf.plugin.autotable.js',
+          'libs/sweetalert2.all.min.js'
+        ]
       }).then(() => {
         chrome.scripting.executeScript({
           target: { tabId: tab.id },
