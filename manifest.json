@@ -1,17 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "Shopee Scraper",
-  "version": "1.0",
-  "description": "Scrape produk Shopee dan export XLSX",
+  "name": "Shopee Scraper GUI",
+  "version": "1.2",
+  "description": "Scrape produk Shopee dengan GUI dan ekspor ke XLSX",
   "permissions": [
     "scripting",
     "activeTab"
   ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Shopee Scraper"
+  },
   "background": {
     "service_worker": "background.js"
-  },
-  "action": {
-    "default_title": "Mulai Scraping Shopee"
   },
   "host_permissions": [
     "https://shopee.co.id/*"
