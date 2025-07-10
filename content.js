@@ -54,6 +54,17 @@
   }
 
   async function startScraping() {
+    Swal.fire({
+      title: 'Memulai Scraping!',
+      text: 'Proses scraping sedang berjalan, mohon tunggu...',
+      icon: 'info',
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     while (currentPage <= endPage) {
       await scrapePage();
       updateProgress((currentPage / endPage) * 100);
@@ -69,11 +80,28 @@
       currentPage++;
     }
 
-    updateStatus(`Scraping selesai. Ditemukan ${allProducts.length} produk.`);
-    exportData();
+    Swal.close();
+
+    if (allProducts.length > 0) {
+      Swal.fire({
+        title: 'Scraping Selesai!',
+        text: `Ditemukan ${allProducts.length} produk. File akan segera diunduh.`,
+        icon: 'success',
+        timer: 3000,
+        showConfirmButton: false
+      });
+      exportData();
+    } else {
+      Swal.fire({
+        title: 'Tidak Ada Hasil',
+        text: 'Tidak ada produk yang ditemukan untuk kata kunci tersebut.',
+        icon: 'warning'
+      });
+    }
+    
     updateProgress(100);
   }
-
+  
   function exportData() {
     const filename = `${keyword}_${new Date().toISOString().slice(0,10)}`;
     switch (exportFormat) {
