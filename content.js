@@ -1,6 +1,6 @@
 (async function () {
   const { startPage, endPage, exportFormat, keyword, sortOption } = window.scrapingOptions;
-  window.scrapingOptions.isPaused = false;  // Initialize pause state
+  window.scrapingOptions.isPaused = false;
 
   const delay = ms => new Promise(res => setTimeout(res, ms));
   const SCROLL_STEP = 500;
@@ -18,9 +18,9 @@
       chrome.runtime.sendMessage({ type: "SCRAPING_PROGRESS", progress });
   }
 
-  // Add event listener for resuming
   document.addEventListener('resumeScraping', () => {
-    // Continue execution will happen in the main loop when isPaused is set to false
+    updateStatus(`Melanjutkan scraping pada halaman ${currentPage}...`);
+    startScraping();
   });
 
   async function scrapePage() {
@@ -29,9 +29,8 @@
     let sameHeightCount = 0;
 
     while (sameHeightCount < 5) {
-        // Check if paused
         while (window.scrapingOptions.isPaused) {
-            await delay(500); // Wait while paused
+            await delay(500);
         }
         
         window.scrollBy(0, SCROLL_STEP);
@@ -47,7 +46,6 @@
 
     try {
       document.querySelectorAll('ul.shopee-search-item-result__items > li.shopee-search-item-result__item').forEach(li => {
-        // Extract product data with null checks and error handling
         try {
           const name = li.querySelector('div.line-clamp-2')?.innerText?.trim() || "N/A";
           const priceWhole = li.querySelector('.text-base\\/5')?.innerText?.trim() || "N/A";
@@ -85,7 +83,6 @@
 async function waitForPageRender(selector, timeout = 10000) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
-    // Check if paused
     if (window.scrapingOptions.isPaused) {
       await delay(500);
       continue;
@@ -114,9 +111,8 @@ async function waitForPageRender(selector, timeout = 10000) {
     await waitForPageRender('ul.shopee-search-item-result__items > li');
 
     while (!endPage || currentPage <= endPage) {
-      // Check if paused before processing the page
       while (window.scrapingOptions.isPaused) {
-        await delay(500); // Wait while paused
+        await delay(500);
       }
       
       await scrapePage();
@@ -128,9 +124,8 @@ async function waitForPageRender(selector, timeout = 10000) {
         break;
       }
       
-      // Check if paused before navigating to the next page
       while (window.scrapingOptions.isPaused) {
-        await delay(500); // Wait while paused
+        await delay(500);
       }
     
       nextButton.click();
@@ -291,7 +286,7 @@ function exportToPDF(data, filename) {
       0: { cellWidth: 40 },
       1: { cellWidth: 25 },
       2: { cellWidth: 25 },
-      3: { cellWidth: 90 } // Link wrap
+      3: { cellWidth: 100 }
     }
   });
 

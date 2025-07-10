@@ -7,13 +7,13 @@
 </div>
 
 <p align="center">
-  <a href="#-features">✨ Features</a> • 
-  <a href="#-installation">🔧 Installation</a> • 
-  <a href="#-how-to-use">📝 How to Use</a> • 
-  <a href="#-export-formats">📊 Export Formats</a> • 
-  <a href="#-screenshots">📸 Screenshots</a> • 
-  <a href="#-security">🛡️ Security</a> • 
-  <a href="#-license">📄 License</a>
+  <a href="#features">✨ Features</a> • 
+  <a href="#installation">🔧 Installation</a> • 
+  <a href="#how-to-use">📝 How to Use</a> • 
+  <a href="#export-formats">📊 Export Formats</a> • 
+  <a href="#screenshots">📸 Screenshots</a> • 
+  <a href="#security">🛡️ Security</a> • 
+  <a href="#license">📄 License</a>
 </p>
 
 ---

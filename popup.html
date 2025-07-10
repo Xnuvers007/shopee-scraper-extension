@@ -5,62 +5,119 @@
   <title>Shopee Scraper</title>
   <link rel="stylesheet" href="style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="libs/sweetalert2.all.min.js"></script>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>Shopee Scraper by <a href="https://github.com/Xnuvers007">Xnuvers007</a></h1>
+      <h1>Shopee Scraper <a href="https://github.com/Xnuvers007" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> Xnuvers007</a></h1>
       <p>Scrape produk dari Shopee dengan mudah.</p>
     </div>
-    <div class="form-group">
-      <label for="keyword">Kata Kunci</label>
-      <input type="text" id="keyword" placeholder="Contoh: VPS 1 tahun">
-    </div>
-    <div class="page-range">
+
+    <div class="form-section">
       <div class="form-group">
-        <label for="startPage">Mulai Halaman</label>
-        <input type="number" id="startPage" value="1" min="1">
-      </div>
-      <div class="form-group">
-        <label for="endPage">Hingga Halaman</label>
-        <input type="number" id="endPage" placeholder="Terakhir" min="1">
+        <label for="keyword"><i class="fas fa-search"></i> Kata Kunci</label>
+        <input type="text" id="keyword" class="form-control" placeholder="Contoh: VPS 1 tahun">
       </div>
     </div>
-    <div class="form-group">
-      <label for="sortOption">Urutkan Berdasarkan</label>
-      <select id="sortOption">
-        <option value="default" selected>Default (Sesuai Tampilan)</option>
-        <option value="price-asc">Harga Termurah → Mahal</option>
-        <option value="price-desc">Harga Termahal → Murah</option>
-        <option value="name-asc">Nama A-Z</option>
-        <option value="name-desc">Nama Z-A</option>
-        <option value="location-asc">Lokasi A-Z</option>
-        <option value="location-desc">Lokasi Z-A</option>
-        <option value="link-asc">Link A-Z</option>
-        <option value="link-desc">Link Z-A</option>
-      </select>
-      <br />      
-      <label for="exportFormat">Format Ekspor</label>
-      <select id="exportFormat">
-        <option value="xlsx" selected>XLSX</option>
-        <option value="pdf">PDF</option>
-        <option value="json">JSON</option>
-        <option value="txt">TXT</option>
-      </select>
+
+    <div class="form-section">
+      <div class="section-title"><i class="fas fa-file-alt"></i> Pengaturan Halaman</div>
+      <div class="page-range">
+        <div class="form-group">
+          <label for="startPage">Mulai Halaman</label>
+          <input type="number" id="startPage" class="form-control" value="1" min="1" placeholder="Pertama">
+        </div>
+        <div class="form-group">
+          <label for="endPage">Hingga Halaman</label>
+          <input type="number" id="endPage" class="form-control" placeholder="Terakhir" min="1" value="1">
+        </div>
+      </div>
     </div>
-    <button id="scrapeBtn">Mulai Scrape</button>
-    <div id="status">Status: Menunggu...</div>
-    <div id="progressContainer" style="display: none;">
-        <label for="progressBar">Progress:</label>
+
+    <div class="form-section">
+      <div class="section-title"><i class="fas fa-sort"></i> Pengaturan Ekspor</div>
+      
+      <div class="form-group">
+        <label for="sortOption">Urutkan Berdasarkan</label>
+        <select id="sortOption" class="form-control">
+          <option value="default" selected>Default (Sesuai Tampilan)</option>
+          <option value="price-asc">Harga Termurah → Mahal</option>
+          <option value="price-desc">Harga Termahal → Murah</option>
+          <option value="name-asc">Nama A-Z</option>
+          <option value="name-desc">Nama Z-A</option>
+          <option value="location-asc">Lokasi A-Z</option>
+          <option value="location-desc">Lokasi Z-A</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Format Ekspor</label>
+        <div class="export-formats">
+          <label class="format-option">
+            <input type="radio" name="exportFormat" value="xlsx" checked>
+            <div class="format-label">
+              <div class="format-icon"><i class="fas fa-file-excel"></i></div>
+              <div class="format-name">XLSX</div>
+            </div>
+          </label>
+          <label class="format-option">
+            <input type="radio" name="exportFormat" value="pdf">
+            <div class="format-label">
+              <div class="format-icon"><i class="fas fa-file-pdf"></i></div>
+              <div class="format-name">PDF</div>
+            </div>
+          </label>
+          <label class="format-option">
+            <input type="radio" name="exportFormat" value="json">
+            <div class="format-label">
+              <div class="format-icon"><i class="fas fa-file-code"></i></div>
+              <div class="format-name">JSON</div>
+            </div>
+          </label>
+          <label class="format-option">
+            <input type="radio" name="exportFormat" value="txt">
+            <div class="format-label">
+              <div class="format-icon"><i class="fas fa-file-alt"></i></div>
+              <div class="format-name">TXT</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <button id="scrapeBtn" class="action-button">
+      <div class="button-icon"><i class="fas fa-play"></i></div>
+      Mulai Scrape
+    </button>
+
+    <div class="status-section">
+      <div id="status">Status: Menunggu...</div>
+      
+      <div id="progressContainer" style="display: none;">
+        <div class="progress-header">
+          <span>Progress:</span>
+          <span id="progressText">0%</span>
+        </div>
         <progress id="progressBar" value="0" max="100"></progress>
-        <span id="progressText">0%</span>
+      </div>
+      
+      <div id="controlButtons" style="display: none; margin-top: 12px;">
+        <button id="pauseBtn" class="control-btn">
+          <i class="fas fa-pause"></i> Jeda
+        </button>
+        <button id="resumeBtn" class="control-btn" disabled>
+          <i class="fas fa-play"></i> Lanjutkan
+        </button>
+      </div>
     </div>
-    <div id="controlButtons" style="display: none; margin-top: 15px;">
-      <button id="pauseBtn" class="control-btn">Jeda</button>
-      <button id="resumeBtn" class="control-btn" disabled>Lanjutkan</button>
+
+    <div class="footer">
+      <span class="version">v1.6.0</span>
     </div>
   </div>
+
   <script src="popup.js"></script>
 </body>
 </html>

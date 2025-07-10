@@ -3,7 +3,7 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
   const startPage = parseInt(document.getElementById("startPage").value, 10);
   const endPageInput = document.getElementById("endPage").value;
   const endPage = endPageInput ? parseInt(endPageInput, 10) : null;
-  const exportFormat = document.getElementById("exportFormat").value;
+  const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
   const status = document.getElementById("status");
   const progressContainer = document.getElementById("progressContainer");
   const progressBar = document.getElementById("progressBar");
@@ -27,7 +27,6 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
   progressBar.value = 0;
   progressText.textContent = '0%';
 
-  // Reset button states
   document.getElementById("pauseBtn").disabled = false;
   document.getElementById("resumeBtn").disabled = true;
 
@@ -83,7 +82,6 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
   });
 });
 
-// Pause button event handler
 document.getElementById("pauseBtn").addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   
@@ -99,7 +97,6 @@ document.getElementById("pauseBtn").addEventListener("click", async () => {
   document.getElementById("status").textContent = "Status: Scraping dijeda...";
 });
 
-// Resume button event handler
 document.getElementById("resumeBtn").addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   
@@ -107,7 +104,6 @@ document.getElementById("resumeBtn").addEventListener("click", async () => {
     target: { tabId: tab.id },
     func: () => {
       window.scrapingOptions.isPaused = false;
-      // Signal content script to resume
       document.dispatchEvent(new CustomEvent('resumeScraping'));
     }
   });
@@ -128,7 +124,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const status = document.getElementById("status");
         status.textContent = `Status: ${request.message}`;
         
-        // Hide control buttons when scraping is completed
         if (request.message.includes("Scraping selesai") || 
             request.message.includes("Selesai.")) {
             document.getElementById("controlButtons").style.display = 'none';
