@@ -89,3 +89,36 @@ button:hover {
 #progressBar {
     width: 100%;
 }
+
+#controlButtons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.control-btn {
+    width: 48%;
+    padding: 8px;
+    font-size: 14px;
+}
+
+#pauseBtn {
+    background-color: #f39c12;
+}
+
+#pauseBtn:hover {
+    background-color: #e67e22;
+}
+
+#resumeBtn {
+    background-color: #2ecc71;
+}
+
+#resumeBtn:hover {
+    background-color: #27ae60;
+}
+
+#resumeBtn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}

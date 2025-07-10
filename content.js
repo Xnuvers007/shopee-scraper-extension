@@ -1,5 +1,6 @@
 (async function () {
-  const { startPage, endPage, exportFormat, keyword } = window.scrapingOptions;
+  const { startPage, endPage, exportFormat, keyword, sortOption } = window.scrapingOptions;
+  window.scrapingOptions.isPaused = false;  // Initialize pause state
 
   const delay = ms => new Promise(res => setTimeout(res, ms));
   const SCROLL_STEP = 500;
@@ -17,12 +18,22 @@
       chrome.runtime.sendMessage({ type: "SCRAPING_PROGRESS", progress });
   }
 
+  // Add event listener for resuming
+  document.addEventListener('resumeScraping', () => {
+    // Continue execution will happen in the main loop when isPaused is set to false
+  });
+
   async function scrapePage() {
     updateStatus(`Menscrape halaman ${currentPage}...`);
     let lastHeight = 0;
     let sameHeightCount = 0;
 
     while (sameHeightCount < 5) {
+        // Check if paused
+        while (window.scrapingOptions.isPaused) {
+            await delay(500); // Wait while paused
+        }
+        
         window.scrollBy(0, SCROLL_STEP);
         await delay(SCROLL_DELAY);
         const newHeight = document.body.scrollHeight;
@@ -34,29 +45,52 @@
         }
     }
 
-    document.querySelectorAll('ul.shopee-search-item-result__items > li.shopee-search-item-result__item').forEach(li => {
-      const name = li.querySelector('div.line-clamp-2')?.innerText.trim();
-      const priceWhole = li.querySelector('.text-base\\/5')?.innerText?.trim();
-      const pricePrefix = li.querySelector('.text-xs\\/sp14.font-medium')?.innerText?.trim();
-      const link = li.querySelector('a')?.href;
-      const locationLabel = li.querySelector('span[aria-label^="location-"]');
-      const location = locationLabel ? locationLabel.nextElementSibling?.innerText.trim() : 'N/A';
-
-      if (name && link && !scrapedItems.has(link)) {
-        scrapedItems.add(link);
-        allProducts.push({
-          "Nama Produk": name,
-          "Harga": `${pricePrefix || "Rp"} ${priceWhole || "N/A"}`,
-          "Lokasi": location || "N/A",
-          "Link": link
-        });
-      }
-    });
+    try {
+      document.querySelectorAll('ul.shopee-search-item-result__items > li.shopee-search-item-result__item').forEach(li => {
+        // Extract product data with null checks and error handling
+        try {
+          const name = li.querySelector('div.line-clamp-2')?.innerText?.trim() || "N/A";
+          const priceWhole = li.querySelector('.text-base\\/5')?.innerText?.trim() || "N/A";
+          const pricePrefix = li.querySelector('.text-xs\\/sp14.font-medium')?.innerText?.trim() || "Rp";
+          const link = li.querySelector('a')?.href;
+          const locationLabel = li.querySelector('span[aria-label^="location-"]');
+          const location = locationLabel ? locationLabel.nextElementSibling?.innerText?.trim() || "N/A" : 'N/A';
+  
+          if (name && link && !scrapedItems.has(link)) {
+            scrapedItems.add(link);
+            allProducts.push({
+              "Nama Produk": name,
+              "Harga": `${pricePrefix || "Rp"} ${priceWhole || "N/A"}`,
+              "Lokasi": location || "N/A",
+              "Link": link || "N/A"    
+            });
+          }
+        } catch (itemError) {
+          console.error("Error extracting product data:", itemError);
+          Swal.fire({
+            title: 'Kesalahan Saat Mengambil Data Produk',
+            text: `Produk mungkin tidak lengkap atau tidak dapat diakses. Kesalahan: ${itemError.message}`,
+            icon: 'error'
+          });
+          updateStatus(`Kesalahan saat mengambil data produk: ${itemError.message}`);
+          throw itemError;
+        }
+      });
+    } catch (error) {
+      console.error("Error during page scraping:", error);
+      updateStatus(`Error saat scraping: ${error.message}`);
+    }
   }
 
 async function waitForPageRender(selector, timeout = 10000) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
+    // Check if paused
+    if (window.scrapingOptions.isPaused) {
+      await delay(500);
+      continue;
+    }
+    
     if (document.querySelector(selector)) {
       return true;
     }
@@ -80,6 +114,11 @@ async function waitForPageRender(selector, timeout = 10000) {
     await waitForPageRender('ul.shopee-search-item-result__items > li');
 
     while (!endPage || currentPage <= endPage) {
+      // Check if paused before processing the page
+      while (window.scrapingOptions.isPaused) {
+        await delay(500); // Wait while paused
+      }
+      
       await scrapePage();
       updateProgress(endPage ? (currentPage / endPage) * 100 : 0);
     
@@ -87,6 +126,11 @@ async function waitForPageRender(selector, timeout = 10000) {
       if (!nextButton || nextButton.disabled) {
         updateStatus("Selesai. Tombol 'Berikutnya' tidak ditemukan atau dinonaktifkan.");
         break;
+      }
+      
+      // Check if paused before navigating to the next page
+      while (window.scrapingOptions.isPaused) {
+        await delay(500); // Wait while paused
       }
     
       nextButton.click();
@@ -113,12 +157,86 @@ async function waitForPageRender(selector, timeout = 10000) {
         icon: 'warning'
       });
     }
+    showNotification("Scraping Selesai", `Pencarian Mengenai "${keyword}" telah selesai. ${allProducts.length} produk berhasil diekspor.`);
+    updateStatus("Scraping selesai.");
     
     updateProgress(100);
   }
+
+  function showNotification(title, message) {
+    chrome.runtime.sendMessage({
+      type: "SHOW_NOTIFICATION",
+      title,
+      message
+    });
+  }  
   
   function exportData() {
-    const filename = `${keyword}_${new Date().toISOString().slice(0,10)}`;
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0,10);
+    const timeStr = now.getHours().toString().padStart(2, '0') + 
+                   now.getMinutes().toString().padStart(2, '0') + 
+                   now.getSeconds().toString().padStart(2, '0');
+    const filename = `${keyword}_${dateStr}_${timeStr}`;
+    if (sortOption === 'price-asc' || sortOption === 'price-desc') {
+      allProducts.sort((a, b) => {
+        const parsePrice = str => {
+          const match = str.match(/[\d.]+/g);
+          return match ? parseInt(match.join('').replace(/\./g, '')) : 0;
+        };
+        const priceA = parsePrice(a["Harga"]);
+        const priceB = parsePrice(b["Harga"]);
+        return sortOption === 'price-asc' ? priceA - priceB : priceB - priceA;
+      });
+    }
+    if (sortOption === 'name-asc' || sortOption === 'name-desc') {
+      allProducts.sort((a, b) => {
+        const nameA = a["Nama Produk"].toLowerCase();
+        const nameB = b["Nama Produk"].toLowerCase();
+        return sortOption === 'name-asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+      }
+    );
+    }
+    if (sortOption === 'location-asc' || sortOption === 'location-desc') {
+      allProducts.sort((a, b) => {
+        const locA = a["Lokasi"].toLowerCase();
+        const locB = b["Lokasi"].toLowerCase();
+        return sortOption === 'location-asc' ? locA.localeCompare(locB) : locB.localeCompare(locA);
+      });
+    }
+    if (sortOption === 'link-asc' || sortOption === 'link-desc') {
+      allProducts.sort((a, b) => {
+        const linkA = a["Link"].toLowerCase();
+        const linkB = b["Link"].toLowerCase();
+        return sortOption === 'link-asc' ? linkA.localeCompare(linkB) : linkB.localeCompare(linkA);
+      }
+    );
+    }
+    if (allProducts.length === 0) {
+      Swal.fire({
+        title: 'Tidak Ada Produk',
+        text: 'Tidak ada produk yang ditemukan untuk kata kunci tersebut.',
+        icon: 'warning'
+      });
+      return;
+    }
+    if (!exportFormat) {
+      Swal.fire({
+        title: 'Format Ekspor Tidak Dipilih',
+        text: 'Silakan pilih format ekspor sebelum melanjutkan.',
+        icon: 'warning'
+      });
+      return;
+    }
+    if (!filename) {
+      Swal.fire({
+        title: 'Nama File Tidak Valid',
+        text: 'Nama file tidak boleh kosong atau mengandung karakter yang tidak valid.',
+        icon: 'warning'
+      });
+      return;
+    }
+      
     switch (exportFormat) {
       case 'xlsx':
         exportToXLSX(allProducts, `${filename}.xlsx`);
@@ -190,28 +308,35 @@ function exportToPDF(data, filename) {
   function exportToTXT(data, filename) {
     let txtString = "";
     data.forEach(item => {
-        txtString += `Nama Produk: ${item["Nama Produk"]}\n`;
-        txtString += `Harga: ${item["Harga"]}\n`;
-        txtString += `Lokasi: ${item["Lokasi"]}\n`;
-        txtString += `Link: ${item["Link"]}\n\n`;
+      const sanitizedName = item["Nama Produk"].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const sanitizedHarga = item["Harga"].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const sanitizedLokasi = item["Lokasi"].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const sanitizedLink = item["Link"].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      
+      txtString += `Nama Produk: ${sanitizedName}\n`;
+      txtString += `Harga: ${sanitizedHarga}\n`;
+      txtString += `Lokasi: ${sanitizedLokasi}\n`;
+      txtString += `Link: ${sanitizedLink}\n\n`;
     });
     const blob = new Blob([txtString], { type: 'text/plain' });
     downloadBlob(blob, filename);
-  }
+    }
 
   function downloadBlob(blob, filename) {
+    const safeFilename = filename.replace(/[^\w\s.-]/gi, '_');
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = safeFilename;
+    a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => {
+      setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 100);
   }
 
   startScraping();
-
+  
 })();

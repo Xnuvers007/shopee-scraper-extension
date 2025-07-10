@@ -8,11 +8,13 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
   const progressContainer = document.getElementById("progressContainer");
   const progressBar = document.getElementById("progressBar");
   const progressText = document.getElementById("progressText");
+  const sortOption = document.getElementById("sortOption").value;
+  const controlButtons = document.getElementById("controlButtons");
 
-  if (!keyword) {
+  if (!keyword || /[<>]/g.test(keyword)) {
     Swal.fire({
       title: 'Oops...',
-      text: 'Kata kunci tidak boleh kosong!',
+      text: 'Kata kunci tidak boleh kosong atau mengandung karakter khusus!',
       icon: 'error',
       confirmButtonText: 'OK'
     });
@@ -21,13 +23,27 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
 
   status.textContent = "Status: Membuka Shopee...";
   progressContainer.style.display = 'block';
+  controlButtons.style.display = 'flex';
   progressBar.value = 0;
   progressText.textContent = '0%';
 
+  // Reset button states
+  document.getElementById("pauseBtn").disabled = false;
+  document.getElementById("resumeBtn").disabled = true;
+
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  const searchURL = `https://shopee.co.id/search?keyword=${encodeURIComponent(keyword)}&page=${startPage - 1}`;
-  await chrome.tabs.update(tab.id, { url: searchURL });
+  const encodedKeyword = encodeURIComponent(keyword);
+  const searchURL = `https://shopee.co.id/search?keyword=${encodedKeyword}&page=${startPage - 1}`;
+  
+  try {
+    new URL(searchURL);
+    await chrome.tabs.update(tab.id, { url: searchURL });
+  } catch (e) {
+    console.error("Invalid URL generated:", e);
+    status.textContent = "Status: Error - Invalid URL";
+    return;
+  }
 
   chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
     if (tabId === tab.id && info.status === 'complete') {
@@ -43,10 +59,18 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
       }).then(() => {
         chrome.scripting.executeScript({
           target: { tabId: tab.id },
-          func: (startPage, endPage, exportFormat, keyword) => {
-            window.scrapingOptions = { startPage, endPage, exportFormat, keyword };
+          func: (startPage, endPage, exportFormat, keyword, sortOption) => {
+            window.scrapingOptions = { 
+              startPage, 
+              endPage, 
+              exportFormat, 
+              keyword, 
+              sortOption,
+              isPaused: false
+            };
           },
-          args: [startPage, endPage, exportFormat, keyword]
+          args: [startPage, endPage, exportFormat, keyword, sortOption]
+          
         }).then(() => {
           chrome.scripting.executeScript({
             target: { tabId: tab.id },
@@ -59,6 +83,40 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
   });
 });
 
+// Pause button event handler
+document.getElementById("pauseBtn").addEventListener("click", async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: () => {
+      window.scrapingOptions.isPaused = true;
+    }
+  });
+  
+  document.getElementById("pauseBtn").disabled = true;
+  document.getElementById("resumeBtn").disabled = false;
+  document.getElementById("status").textContent = "Status: Scraping dijeda...";
+});
+
+// Resume button event handler
+document.getElementById("resumeBtn").addEventListener("click", async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: () => {
+      window.scrapingOptions.isPaused = false;
+      // Signal content script to resume
+      document.dispatchEvent(new CustomEvent('resumeScraping'));
+    }
+  });
+  
+  document.getElementById("pauseBtn").disabled = false;
+  document.getElementById("resumeBtn").disabled = true;
+  document.getElementById("status").textContent = "Status: Scraping dilanjutkan...";
+});
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === "SCRAPING_PROGRESS") {
         const progressBar = document.getElementById("progressBar");
@@ -66,8 +124,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         progressBar.value = request.progress;
         progressText.textContent = `${Math.round(request.progress)}%`;
     }
-     if (request.type === "SCRAPING_STATUS") {
+    if (request.type === "SCRAPING_STATUS") {
         const status = document.getElementById("status");
         status.textContent = `Status: ${request.message}`;
+        
+        // Hide control buttons when scraping is completed
+        if (request.message.includes("Scraping selesai") || 
+            request.message.includes("Selesai.")) {
+            document.getElementById("controlButtons").style.display = 'none';
+        }
     }
+    if (request.type === "SHOW_NOTIFICATION") {
+      chrome.notifications.create({
+        type: "basic",
+        iconUrl: "icons/icon128.png",
+        title: request.title,
+        message: request.message
+      });
+    } 
+    sendResponse({ success: true });
+    return true;    
 });

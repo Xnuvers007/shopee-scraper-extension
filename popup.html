@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" oncontextmenu="return false;">
 <head>
   <meta charset="utf-8">
   <title>Shopee Scraper</title>
   <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="libs/sweetalert2.all.min.js"></script>
 </head>
 <body>
@@ -27,6 +28,19 @@
       </div>
     </div>
     <div class="form-group">
+      <label for="sortOption">Urutkan Berdasarkan</label>
+      <select id="sortOption">
+        <option value="default" selected>Default (Sesuai Tampilan)</option>
+        <option value="price-asc">Harga Termurah → Mahal</option>
+        <option value="price-desc">Harga Termahal → Murah</option>
+        <option value="name-asc">Nama A-Z</option>
+        <option value="name-desc">Nama Z-A</option>
+        <option value="location-asc">Lokasi A-Z</option>
+        <option value="location-desc">Lokasi Z-A</option>
+        <option value="link-asc">Link A-Z</option>
+        <option value="link-desc">Link Z-A</option>
+      </select>
+      <br />      
       <label for="exportFormat">Format Ekspor</label>
       <select id="exportFormat">
         <option value="xlsx" selected>XLSX</option>
@@ -41,6 +55,10 @@
         <label for="progressBar">Progress:</label>
         <progress id="progressBar" value="0" max="100"></progress>
         <span id="progressText">0%</span>
+    </div>
+    <div id="controlButtons" style="display: none; margin-top: 15px;">
+      <button id="pauseBtn" class="control-btn">Jeda</button>
+      <button id="resumeBtn" class="control-btn" disabled>Lanjutkan</button>
     </div>
   </div>
   <script src="popup.js"></script>
