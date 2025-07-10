@@ -31,13 +31,18 @@
       "resources": [
         "libs/xlsx.full.min.js",
         "libs/jspdf.umd.min.js",
-        "libs/jspdf.plugin.autotable.js"
+        "libs/jspdf.plugin.autotable.js",
+        "libs/sweetalert2.all.min.js" 
       ],
       "matches": [
         "https://shopee.co.id/*"
       ]
     }
   ],
+   "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'",
+    "sandbox": "sandbox allow-scripts; script-src 'self' 'https://cdn.jsdelivr.net/npm/sweetalert2@11';"
+  },
   "minimum_chrome_version": "88",
   "offline_enabled": true
 }
