@@ -25,7 +25,7 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-  const searchURL = `https://shopee.co.id/search?keyword=${encodeURIComponent(keyword)}&page=${startPage - 1}`;
+  const searchURL = `https://shopee.co.id/search?keyword=${encodeURIComponent(keyword)}&page=${startPage}`;
   await chrome.tabs.update(tab.id, { url: searchURL });
 
   chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
