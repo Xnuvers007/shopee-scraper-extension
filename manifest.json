@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Shopee Scraper by Xnuvers007",
+  "version": "1.0",
+  "description": "Scrape produk Shopee dan export XLSX",
+  "permissions": [
+    "scripting",
+    "activeTab"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Mulai Scraping Shopee"
+  },
+  "host_permissions": [
+    "https://shopee.co.id/*"
+  ]
+}
