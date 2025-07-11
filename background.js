@@ -5,9 +5,15 @@ chrome.action.onClicked.addListener(async (tab) => {
       files: ['libs/xlsx.full.min.js']
     });
 
-    await chrome.scripting.executeScript({
+    chrome.storage.local.get("extensionEnabled", (data) => {
+      if (data.extensionEnabled === false) {
+        console.log("Ekstensi dinonaktifkan. Tidak menjalankan aksi.");
+        return;
+      }
+    chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ['content.js']
+    });
     });
 
     console.log('✅ Scripts injected successfully');
@@ -30,4 +36,7 @@ chrome.action.onClicked.addListener(async (tab) => {
   chrome.storage.local.set({ scrapingActive: true }, () => {
     console.log('✅ Scraping state saved');
   });
+  chrome.runtime.onInstalled.addListener(() => {
+    chrome.storage.local.set({ extensionEnabled: true });
+  });  
 });

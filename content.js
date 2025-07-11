@@ -1,5 +1,33 @@
 (async function () {
-  const { startPage, endPage, exportFormat, keyword, sortOption } = window.scrapingOptions;
+
+  const { extensionEnabled } = await new Promise((resolve) => {
+    chrome.storage.local.get("extensionEnabled", resolve);
+  });
+
+  if (!extensionEnabled) {
+    console.log("Ekstensi dinonaktifkan. Tidak menjalankan scraping.");
+    return;
+  }
+
+  let scrapingOptions = window.scrapingOptions;
+
+  if (!scrapingOptions) {
+    scrapingOptions = await new Promise((resolve) => {
+      chrome.storage.local.get("scrapingOptions", (result) => {
+        window.scrapingOptions = result.scrapingOptions || {};
+        resolve(window.scrapingOptions);
+      });
+    });
+  }
+
+  const {
+    startPage = 1,
+    endPage = 1,
+    exportFormat = "xlsx",
+    keyword = "pulsa",
+    sortOption = "",
+  } = scrapingOptions;
+
   window.scrapingOptions.isPaused = false;
 
   const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -119,7 +147,7 @@ async function waitForPageRender(selector, timeout = 10000) {
       updateProgress(endPage ? (currentPage / endPage) * 100 : 0);
     
       const nextButton = document.querySelector('.shopee-icon-button--right');
-      if (!nextButton || nextButton.disabled) {
+      if (!nextButton || nextButton.disabled || nextButton.getAttribute("disabled") !== null) {
         updateStatus("Selesai. Tombol 'Berikutnya' tidak ditemukan atau dinonaktifkan.");
         break;
       }

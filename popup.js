@@ -1,3 +1,38 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.getElementById("toggle-extension");
+  const scrapeBtn = document.getElementById("scrapeBtn");
+
+  chrome.storage.local.get("extensionEnabled", (data) => {
+    const isEnabled = data.extensionEnabled !== false; // Default: true
+    toggle.checked = isEnabled;
+    scrapeBtn.disabled = !isEnabled;
+
+    const statusText = document.getElementById("status-text");
+    if (!isEnabled) {
+      statusText.textContent = "Nonaktif";
+      statusText.style.color = "var(--neutral-500)";
+    } else {
+      statusText.textContent = "Aktif";
+      statusText.style.color = "var(--neutral-900)";
+    }
+  });
+
+  toggle.addEventListener("change", (e) => {
+    const isEnabled = e.target.checked;
+    chrome.storage.local.set({ extensionEnabled: isEnabled }, () => {
+      console.log(`Ekstensi ${isEnabled ? "diaktifkan" : "dinonaktifkan"}`);
+      scrapeBtn.disabled = !isEnabled;
+      const statusText = document.getElementById("status-text");
+      if (!isEnabled) {
+        statusText.textContent = "Nonaktif";
+        statusText.style.color = "var(--neutral-500)";
+      } else {
+        statusText.textContent = "Aktif";
+        statusText.style.color = "var(--neutral-900)";
+      }
+    });
+  });
+
 document.getElementById("scrapeBtn").addEventListener("click", async () => {
   const keyword = document.getElementById("keyword").value.trim();
   const startPage = parseInt(document.getElementById("startPage").value, 10);
@@ -11,6 +46,18 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
   const sortOption = document.getElementById("sortOption").value;
   const controlButtons = document.getElementById("controlButtons");
 
+  const preferences = {
+    keyword: keyword,
+    startPage: startPage,
+    endPage: endPage,
+    exportFormat: exportFormat,
+    sortOption: sortOption
+  };
+  chrome.storage.local.set({ preferences }, () => {
+    console.log('Preferences saved:', preferences);
+  }
+  );
+
   if (!keyword || /[<>]/g.test(keyword)) {
     Swal.fire({
       title: 'Oops...',
@@ -20,6 +67,25 @@ document.getElementById("scrapeBtn").addEventListener("click", async () => {
     });
     return;
   }
+
+  if (endPage && startPage > endPage) {
+    Swal.fire({
+      title: 'Oops...',
+      text: 'Halaman mulai tidak boleh lebih besar dari halaman akhir!',
+      icon: 'error',
+      confirmButtonText: 'OK'
+    });
+    return;
+  }
+  if (startPage < 1 || (endPage && endPage < 1)) {
+    Swal.fire({
+      title: 'Oops...',
+      text: 'Halaman harus dimulai dari 1 atau lebih!',
+      icon: 'error',
+      confirmButtonText: 'OK'
+    });
+    return;
+  }  
 
   status.textContent = "Status: Membuka Shopee...";
   progressContainer.style.display = 'block';
@@ -139,4 +205,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } 
     sendResponse({ success: true });
     return true;    
+});
+
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === "F12" || 
+      (e.ctrlKey && e.shiftKey && ["i", "j", "c"].includes(e.key.toLowerCase())) ||
+      (e.ctrlKey && e.key.toLowerCase() === "u")) {
+    e.preventDefault();
+  }
+  if (e.ctrlKey && e.key === "s") {
+    document.getElementById("scrapeBtn").click();
+  } else if (e.ctrlKey && e.key === "p") {
+    document.getElementById("pauseBtn").click();
+  } else if (e.ctrlKey && e.key === "r") {
+    document.getElementById("resumeBtn").click();
+  }
+});
+
+chrome.storage.local.get("preferences", (data) => {
+  if (data.preferences) {
+    document.getElementById("keyword").value = data.preferences.keyword || '';
+    document.getElementById("startPage").value = data.preferences.startPage || 1;
+    document.getElementById("endPage").value = data.preferences.endPage || '';
+    document.querySelector(`input[name="exportFormat"][value="${data.preferences.exportFormat}"]`).checked = true;
+    document.getElementById("sortOption").value = data.preferences.sortOption || 'default';
+  }
+});
+
+chrome.storage.local.get("extensionEnabled", (data) => {
+  const toggle = document.getElementById("toggle-extension");
+  toggle.checked = data.extensionEnabled !== false; // default: true
+});
+
+document.getElementById("toggle-extension").addEventListener("change", (e) => {
+  chrome.storage.local.set({ extensionEnabled: e.target.checked });
+});
 });

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" oncontextmenu="return false;">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Shopee Scraper</title>
@@ -13,12 +13,26 @@
     <div class="header">
       <h1>Shopee Scraper <a href="https://github.com/Xnuvers007" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> Xnuvers007</a></h1>
       <p>Scrape produk dari Shopee dengan mudah.</p>
+      <br />
+      <p>Jika Ekstensi tidak jalan padahal aktif, maka nonaktifkan terlebih dahulu lalu nyalakan kembali<br/>Jika Loading scraping lama/produk pencarian tidak muncul silakan start lagi ekstensinya</p>
+      <br />
+      <p>
+        <strong>Catatan:</strong> Ekstensi ini hanya dapat digunakan untuk scraping data produk Shopee. Pastikan Anda mematuhi kebijakan penggunaan Shopee dan tidak melakukan tindakan yang melanggar ketentuan layanan mereka.
+      </p>
+      <label class="toggle-container">
+        <input type="checkbox" id="toggle-extension">
+        <span class="slider"></span>
+        Aktifkan Ekstensi
+      </label>
+      <div id="status-indicator" class="status-indicator">
+        Status: <span id="status-text">Aktif</span>
+      </div>
     </div>
 
     <div class="form-section">
       <div class="form-group">
         <label for="keyword"><i class="fas fa-search"></i> Kata Kunci</label>
-        <input type="text" id="keyword" class="form-control" placeholder="Contoh: VPS 1 tahun">
+        <input type="text" id="keyword" class="form-control" placeholder="Contoh: VPS 1 tahun" autocomplete="on">
       </div>
     </div>
 
@@ -87,7 +101,7 @@
       </div>
     </div>
 
-    <button id="scrapeBtn" class="action-button">
+    <button id="scrapeBtn" class="action-button" disabled>
       <div class="button-icon"><i class="fas fa-play"></i></div>
       Mulai Scrape
     </button>

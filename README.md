@@ -33,7 +33,8 @@
 
 ## 🔧 Installation
 
-### 📦 Method 1: Chrome Web Store
+### 📦 Method 1: Chrome Web Store ~~PAY~~ / Microsoft Add Ons
+
 > _Coming Soon_
 
 ### 🧰 Method 2: Manual Installation
@@ -97,13 +98,15 @@
 
 <div align="center">
   <p><strong>Extension Interface</strong></p>
-  <img src="https://raw.githubusercontent.com/xnuvers007/shopee-scraper-extension/master/screenshots/interface.png" width="320" />
+  <img src="./images/interface.png" width="320" />
+  <img src="./images/interface2.png" width="320" />
 
   <p><strong>Scraping in Progress</strong></p>
-  <img src="https://raw.githubusercontent.com/xnuvers007/shopee-scraper-extension/master/screenshots/scraping.png" width="320" />
+  <img src="./images/progress.png" width="320" />
+  <img src="./images/progress2.png" width="320" />
 
   <p><strong>Excel Export Example</strong></p>
-  <img src="https://raw.githubusercontent.com/xnuvers007/shopee-scraper-extension/master/screenshots/excel_export.png" width="720" />
+  <img src="./images/exportexcel.png" width="720" />
 </div>
 
 ---

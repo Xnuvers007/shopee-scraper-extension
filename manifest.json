@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Shopee Scraper by Xnuvers007",
-  "version": "1.6",
-  "version_name": "1.6.0",
+  "version": "1.7",
+  "version_name": "1.7.0",
   "author": "Xnuvers007",
   "description": "Ekstensi Chrome untuk melakukan scraping data produk dari Shopee.co.id dengan antarmuka yang mudah digunakan dan mengekspor hasilnya ke format XLSX, PDF, JSON, atau TXT.",
   "homepage_url": "https://github.com/xnuvers007/shopee-scraper-extension",
@@ -15,7 +15,8 @@
     "scripting",
     "activeTab",
     "storage",
-    "notifications"
+    "notifications",
+    "tabs"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -33,13 +34,21 @@
         "libs/xlsx.full.min.js",
         "libs/jspdf.umd.min.js",
         "libs/jspdf.plugin.autotable.js",
-        "libs/sweetalert2.all.min.js" 
+        "libs/sweetalert2.all.min.js",
+        "libs/all.min.js"
       ],
       "matches": [
         "https://shopee.co.id/*"
       ]
     }
   ],
+  "content_scripts": [
+  {
+    "matches": ["https://shopee.co.id/*"],
+    "js": ["libs/xlsx.full.min.js", "libs/jspdf.umd.min.js", "libs/jspdf.plugin.autotable.js", "libs/sweetalert2.all.min.js", "content.js"],
+    "run_at": "document_idle"
+  }
+],
    "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'",
     "sandbox": "sandbox allow-scripts; script-src 'self' 'https://cdn.jsdelivr.net/npm/sweetalert2@11';"

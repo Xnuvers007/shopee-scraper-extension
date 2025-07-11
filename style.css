@@ -383,3 +383,69 @@ progress::-webkit-progress-value {
   border-radius: var(--radius-sm);
   font-weight: 500;
 }
+
+/* buat on off */
+/* Tambahkan di style.css */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--neutral-700);
+}
+
+.toggle-container input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-container .slider {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  background-color: var(--neutral-300);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-container .slider::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s ease;
+}
+
+.toggle-container input[type="checkbox"]:checked + .slider {
+  background-color: var(--primary);
+}
+
+.toggle-container input[type="checkbox"]:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+/* Tambahkan di style.css */
+.status-indicator {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--neutral-700);
+}
+
+.status-indicator #status-text {
+  font-weight: 600;
+  color: var(--neutral-900);
+}
+
+/* Tambahkan gaya untuk tombol yang dinonaktifkan */
+.action-button:disabled {
+  background: var(--neutral-300);
+  color: var(--neutral-500);
+  cursor: not-allowed;
+  box-shadow: none;
+}
